@@ -19,6 +19,7 @@ class Course(db.Model, Base):
     name = db.Column(db.String)
     link = db.Column(db.String)  # link to include referral code
     description = db.Column(db.String)
+    coupons = db.relationship("Coupon")
     review_quotes = db.relationship("ReviewQuote")
 
     def __init__(
@@ -43,19 +44,10 @@ class Course(db.Model, Base):
         self.update_db()
 
     @property
-    def valid_coupons(self):
-        """
-        Return all valid coupon codes for course.
+    def valid_coupons(self) -> List[CouponDict]:
+        """Return all valid coupon objects for course."""
 
-        returns:
-            list of strings
-        """
-
-        all_coupons = Coupon.query.filter(
-            Coupon.course_id == self.id,
-        ).all()
-
-        return [coupon for coupon in all_coupons if coupon.is_valid()]
+        return [coupon for coupon in self.coupons if coupon.is_valid()]
 
     def update_from_patch(self, json_patch):
         """Update based on JsonPatch."""

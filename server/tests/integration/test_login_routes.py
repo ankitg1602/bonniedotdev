@@ -22,13 +22,9 @@ def test_valid_login(
     password,
     expected_response,
 ):
-    print("starting login test")
-
     response = test_client.get(
         "/api/login",
         json={"username": username, "password": password},
     )
-
-    print("ending login test")
 
     assert response.json["valid"] == expected_response

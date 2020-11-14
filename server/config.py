@@ -1,15 +1,14 @@
 """Flask settings for this app."""
 import os
 
+user = os.getenv("PSQL_USERNAME")
+pw = os.getenv("PSQL_PASSWORD")
+host = os.getenv("PSQL_HOST")
+port = os.getenv("PSQL_PORT")
+
 
 def create_db_uri(db_name):
     """Create db URI from env vars and db name."""
-
-    user = os.getenv("PSQL_USERNAME")
-    pw = os.getenv("PSQL_PASSWORD")
-    host = os.getenv("PSQL_HOST")
-    port = os.getenv("PSQL_PORT")
-
     return f"postgresql://{user}:{pw}@{host}:{port}/{db_name}"
 
 
