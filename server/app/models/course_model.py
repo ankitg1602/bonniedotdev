@@ -77,8 +77,10 @@ class Course(db.Model, Base):
             "name": self.name,
             "description": self.description,
             "link": self.link,
-            "valid_coupons": self.valid_coupons,
-            "review_quotes": self.review_quotes,
+            "valid_coupons": [coupon.to_dict() for coupon in self.valid_coupons],
+            "review_quotes": [
+                review_quote.to_dict() for review_quote in self.review_quotes
+            ],
         }
 
     def __repr__(self):

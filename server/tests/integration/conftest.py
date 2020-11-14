@@ -2,14 +2,61 @@ from datetime import datetime
 from datetime import timedelta
 
 import pytest
-from app import create_app
-from app.db import connect_to_db
-from app.db import db
+import sqlalchemy as sa
 from app.models.course_model import Course
 from app.models.user_model import User
+from config import create_db_uri
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from pytest_postgresql.factories import drop_postgresql_database
+from pytest_postgresql.factories import init_postgresql_database
+
+DB_CONN = create_db_uri("test_bonniedotdev")
+DB_OPTS = sa.engine.url.make_url(DB_CONN).translate_connect_args()
 
 
-def load_test_data():
+@pytest.fixture(scope="session")
+def database(request):
+    """
+    Create a Postgres database for the tests, and drop it when the tests are done.
+    """
+    pg_host = DB_OPTS.get("host")
+    pg_port = DB_OPTS.get("port")
+    pg_user = DB_OPTS.get("username")
+    pg_db = DB_OPTS["database"]
+
+    init_postgresql_database(pg_user, pg_host, pg_port, pg_db)
+
+    @request.addfinalizer
+    def drop_database():
+        drop_postgresql_database(pg_user, pg_host, pg_port, pg_db, 9.6)
+
+
+@pytest.fixture(scope="session")
+def app(database):
+    """
+    Create a Flask app context for the tests.
+    """
+    app = Flask(__name__)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = DB_CONN
+
+    return app
+
+
+@pytest.fixture(scope="session")
+def _db(app):
+    """
+    Provide the transactional fixtures with access to the database via a
+    Flask-SQLAlchemy database connection.
+    """
+    db = SQLAlchemy(app=app)
+
+    return db
+
+
+@pytest.fixture
+def load_db_data(db_session):
     """Load test data into db."""
 
     future_iso_date = datetime.isoformat(datetime.now() + timedelta(days=30))
@@ -35,6 +82,11 @@ def load_test_data():
                 {"review_quote": "meh"},
             ],
         },
+        {
+            "name": "Simple Course",
+            "link": "https://udemy.com/simplecourse",
+            "description": "No coupons or reviews!",
+        },
     ]
     users = [{"username": "admin", "password": "abc123"}]
 
@@ -43,27 +95,3 @@ def load_test_data():
 
     for user in users:
         User(**user)
-
-
-@pytest.fixture
-def connect_db():
-    app = create_app(flask_env="test")
-    db.init_app(app)
-    connect_to_db(app)
-
-
-@pytest.fixture
-def db_setup_with_data(connect_db):
-    """Set up database for testing"""
-
-    # test db should be part of app config
-    db.create_all()
-    load_test_data()
-
-
-@pytest.fixture
-def db_teardown(connect_db):
-    """Tear down database for testing"""
-
-    db.session.close()
-    db.drop_all()

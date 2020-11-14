@@ -1,3 +1,4 @@
+from app.resources.courses_resource import Courses
 from app.resources.login_resource import Login
 from config import app_config
 from flask import Flask
@@ -29,8 +30,8 @@ def create_app(flask_env):
     api = Api(app, prefix="/api", catch_all_404s=True)
 
     # add resources / routes
-    # api.add_resource(FooterLinks, "/api/footer_links")
     api.add_resource(Login, "/login")
+    api.add_resource(Courses, "/courses")
 
     @app.route("/")
     def serve_react():

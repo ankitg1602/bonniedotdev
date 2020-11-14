@@ -1,12 +1,16 @@
 """Flask settings for this app."""
 import os
 
-user = os.getenv("PSQL_USERNAME")
-pw = os.getenv("PSQL_PASSWORD")
-host = os.getenv("PSQL_HOST")
-port = os.getenv("PSQL_PORT")
 
-psql_uri_prefix = f"postgresql://{user}:{pw}@{host}:{port}"
+def create_db_uri(db_name):
+    """Create db URI from env vars and db name."""
+
+    user = os.getenv("PSQL_USERNAME")
+    pw = os.getenv("PSQL_PASSWORD")
+    host = os.getenv("PSQL_HOST")
+    port = os.getenv("PSQL_PORT")
+
+    return f"postgresql://{user}:{pw}@{host}:{port}/{db_name}"
 
 
 class CommonConfig:
@@ -26,21 +30,21 @@ class ProductionConfig(CommonConfig):
     """Settings for production."""
 
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = f"{psql_uri_prefix}/bonniedotdev"
+    SQLALCHEMY_DATABASE_URI = create_db_uri("bonniedotdev")
 
 
 class DevConfig(CommonConfig):
     """Settings for development."""
 
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = f"{psql_uri_prefix}/dev_bonniedotdev"
+    SQLALCHEMY_DATABASE_URI = create_db_uri("dev_bonniedotdev")
 
 
 class TestConfig(CommonConfig):
     """Settings for test."""
 
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = f"{psql_uri_prefix}/test_bonniedotdev"
+    SQLALCHEMY_DATABASE_URI = create_db_uri("test_bonniedotdev")
 
 
 # to make it easier to select which config to use without conditionals
